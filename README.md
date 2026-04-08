@@ -18,6 +18,7 @@ tags:
 A real-world inspired environment where an AI agent must allocate ambulances efficiently across multiple emergency zones.
 
 The goal is to maximize rescue effectiveness under resource constraints such as limited ambulances, varying severity, and distance.
+This is also based on a hackathon project i made at IIIT KOTTAYAM which uses OpenCV and YOLO v8n model to detect and categorize road accidednts using cctv live feed to alert the emergency services like in this use case Ambulances
 
 ---
 
