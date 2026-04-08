@@ -1,255 +1,96 @@
----
-title: My Env Environment Server
-emoji: 🏐
-colorFrom: gray
-colorTo: indigo
-sdk: docker
-pinned: false
-app_port: 8000
-base_path: /web
-tags:
-  - openenv
----
+# 🚑 Rapid Rescue AI Environment
 
-# My Env Environment
+## Overview
 
-A simple test environment that echoes back messages. Perfect for testing the env APIs as well as demonstrating environment usage patterns.
+This project simulates a real-world emergency response system where an AI agent must decide how to allocate ambulances across multiple accident zones.
 
-## Quick Start
+The goal is to maximize rescue effectiveness under resource constraints.
 
-The simplest way to use the My Env environment is through the `MyEnv` class:
+## Problem Statement
 
-```python
-from my_env import MyAction, MyEnv
+Given multiple zones with:
 
-try:
-    # Create environment from Docker image
-    my_envenv = MyEnv.from_docker_image("my_env-env:latest")
+* Number of people affected
+* Severity (risk level)
+* Distance from ambulance
 
-    # Reset
-    result = my_envenv.reset()
-    print(f"Reset: {result.observation.echoed_message}")
+The agent must choose the best zone to send an ambulance.
 
-    # Send multiple messages
-    messages = ["Hello, World!", "Testing echo", "Final message"]
+## Observation Space
 
-    for msg in messages:
-        result = my_envenv.step(MyAction(message=msg))
-        print(f"Sent: '{msg}'")
-        print(f"  → Echoed: '{result.observation.echoed_message}'")
-        print(f"  → Length: {result.observation.message_length}")
-        print(f"  → Reward: {result.reward}")
+Each step provides:
 
-finally:
-    # Always clean up
-    my_envenv.close()
-```
+### Zones
 
-That's it! The `MyEnv.from_docker_image()` method handles:
-- Starting the Docker container
-- Waiting for the server to be ready
-- Connecting to the environment
-- Container cleanup when you call `close()`
+* people: number of people needing rescue
+* severity: urgency level
+* distance: travel cost
 
-## Building the Docker Image
+### Ambulances
 
-Before using the environment, you need to build the Docker image:
+* availability status
+* busy time (if occupied)
 
-```bash
-# From project root
-docker build -t my_env-env:latest -f server/Dockerfile .
-```
+## Action Space
 
-## Deploying to Hugging Face Spaces
+* Integer index representing selected zone
 
-You can easily deploy your OpenEnv environment to Hugging Face Spaces using the `openenv push` command:
+Example:
+"0", "1", "2"
 
-```bash
-# From the environment directory (where openenv.yaml is located)
-openenv push
+## Reward Function
 
-# Or specify options
-openenv push --namespace my-org --private
-```
+Reward is based on:
 
-The `openenv push` command will:
-1. Validate that the directory is an OpenEnv environment (checks for `openenv.yaml`)
-2. Prepare a custom build for Hugging Face Docker space (enables web interface)
-3. Upload to Hugging Face (ensuring you're logged in)
+* People rescued
+* Higher severity gives higher reward
+* Distance penalty
+* Invalid action penalty
 
-### Prerequisites
+## Environment Dynamics
 
-- Authenticate with Hugging Face: The command will prompt for login if not already authenticated
+* Zones worsen over time (people increase, severity rises)
+* Ambulances become unavailable after dispatch
+* Agent must balance urgency vs efficiency
 
-### Options
+## Tasks
 
-- `--directory`, `-d`: Directory containing the OpenEnv environment (defaults to current directory)
-- `--repo-id`, `-r`: Repository ID in format 'username/repo-name' (defaults to 'username/env-name' from openenv.yaml)
-- `--base-image`, `-b`: Base Docker image to use (overrides Dockerfile FROM)
-- `--private`: Deploy the space as private (default: public)
+* Easy: fewer zones, lower severity
+* Medium: moderate complexity
+* Hard: dynamic escalation with limited resources
 
-### Examples
+## Setup
 
-```bash
-# Push to your personal namespace (defaults to username/env-name from openenv.yaml)
-openenv push
+pip install -r server/requirements.txt
 
-# Push to a specific repository
-openenv push --repo-id my-org/my-env
+## Run Inference
 
-# Push with a custom base image
-openenv push --base-image ghcr.io/meta-pytorch/openenv-base:latest
+python inference.py
 
-# Push as a private space
-openenv push --private
+## Deployment
 
-# Combine options
-openenv push --repo-id my-org/my-env --base-image custom-base:latest --private
-```
+This environment is deployed using:
 
-After deployment, your space will be available at:
-`https://huggingface.co/spaces/<repo-id>`
-
-The deployed space includes:
-- **Web Interface** at `/web` - Interactive UI for exploring the environment
-- **API Documentation** at `/docs` - Full OpenAPI/Swagger interface
-- **Health Check** at `/health` - Container health monitoring
-- **WebSocket** at `/ws` - Persistent session endpoint for low-latency interactions
+* OpenEnv specification
+* FastAPI backend
+* Docker container
+* Hugging Face Spaces
 
-## Environment Details
+## API Endpoints
 
-### Action
-**MyAction**: Contains a single field
-- `message` (str) - The message to echo back
+* /reset → initialize environment
+* /step → perform action
+* /health → health check
 
-### Observation
-**MyObservation**: Contains the echo response and metadata
-- `echoed_message` (str) - The message echoed back
-- `message_length` (int) - Length of the message
-- `reward` (float) - Reward based on message length (length × 0.1)
-- `done` (bool) - Always False for echo environment
-- `metadata` (dict) - Additional info like step count
+## Real-World Relevance
 
-### Reward
-The reward is calculated as: `message_length × 0.1`
-- "Hi" → reward: 0.2
-- "Hello, World!" → reward: 1.3
-- Empty message → reward: 0.0
+This environment models:
 
-## Advanced Usage
+* Ambulance allocation systems
+* Disaster response optimization
+* Resource-constrained decision making
 
-### Connecting to an Existing Server
+## Notes
 
-If you already have a My Env environment server running, you can connect directly:
+Designed to evaluate AI agents in dynamic, high-stakes environments with trade-offs between speed, priority, and resource availability.
 
-```python
-from my_env import MyEnv
-
-# Connect to existing server
-my_envenv = MyEnv(base_url="<ENV_HTTP_URL_HERE>")
-
-# Use as normal
-result = my_envenv.reset()
-result = my_envenv.step(MyAction(message="Hello!"))
-```
-
-Note: When connecting to an existing server, `my_envenv.close()` will NOT stop the server.
-
-### Using the Context Manager
-
-The client supports context manager usage for automatic connection management:
-
-```python
-from my_env import MyAction, MyEnv
-
-# Connect with context manager (auto-connects and closes)
-with MyEnv(base_url="http://localhost:8000") as env:
-    result = env.reset()
-    print(f"Reset: {result.observation.echoed_message}")
-    # Multiple steps with low latency
-    for msg in ["Hello", "World", "!"]:
-        result = env.step(MyAction(message=msg))
-        print(f"Echoed: {result.observation.echoed_message}")
-```
-
-The client uses WebSocket connections for:
-- **Lower latency**: No HTTP connection overhead per request
-- **Persistent session**: Server maintains your environment state
-- **Efficient for episodes**: Better for many sequential steps
-
-### Concurrent WebSocket Sessions
-
-The server supports multiple concurrent WebSocket connections. To enable this,
-modify `server/app.py` to use factory mode:
-
-```python
-# In server/app.py - use factory mode for concurrent sessions
-app = create_app(
-    MyEnvironment,  # Pass class, not instance
-    MyAction,
-    MyObservation,
-    max_concurrent_envs=4,  # Allow 4 concurrent sessions
-)
-```
-
-Then multiple clients can connect simultaneously:
-
-```python
-from my_env import MyAction, MyEnv
-from concurrent.futures import ThreadPoolExecutor
-
-def run_episode(client_id: int):
-    with MyEnv(base_url="http://localhost:8000") as env:
-        result = env.reset()
-        for i in range(10):
-            result = env.step(MyAction(message=f"Client {client_id}, step {i}"))
-        return client_id, result.observation.message_length
-
-# Run 4 episodes concurrently
-with ThreadPoolExecutor(max_workers=4) as executor:
-    results = list(executor.map(run_episode, range(4)))
-```
-
-## Development & Testing
-
-### Direct Environment Testing
-
-Test the environment logic directly without starting the HTTP server:
-
-```bash
-# From the server directory
-python3 server/my_env_environment.py
-```
-
-This verifies that:
-- Environment resets correctly
-- Step executes actions properly
-- State tracking works
-- Rewards are calculated correctly
-
-### Running Locally
-
-Run the server locally for development:
-
-```bash
-uvicorn server.app:app --reload
-```
-
-## Project Structure
-
-```
-my_env/
-├── .dockerignore         # Docker build exclusions
-├── __init__.py            # Module exports
-├── README.md              # This file
-├── openenv.yaml           # OpenEnv manifest
-├── pyproject.toml         # Project metadata and dependencies
-├── uv.lock                # Locked dependencies (generated)
-├── client.py              # MyEnv client
-├── models.py              # Action and Observation models
-└── server/
-    ├── __init__.py        # Server module exports
-    ├── my_env_environment.py  # Core environment logic
-    ├── app.py             # FastAPI application (HTTP + WebSocket endpoints)
-    └── Dockerfile         # Container image definition
-```
