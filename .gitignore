@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+venv/
+.venv/
+
+# Environment variables (VERY IMPORTANT)
+.env
+
+# OS files
+.DS_Store
+
+# IDE files
+.vscode/
+.idea/
+
+# Build / cache
+*.log
+*.tmp
+
+# Python packaging
+*.egg-info/
+dist/
+build/

@@ -1,0 +1,26 @@
+spec_version: 1
+name: my_env
+type: space
+runtime: fastapi
+app: server.app:app
+port: 8000
+
+tasks:
+  - id: easy
+    description: "Low complexity emergency scenarios"
+    max_steps: 5
+
+  - id: medium
+    description: "Moderate emergency scenarios with trade-offs"
+    max_steps: 7
+
+  - id: hard
+    description: "High complexity emergency scenarios with severe conditions"
+    max_steps: 10
+    
+
+graders:
+  - id: default_grader
+    description: "Scores agent based on total reward"
+    type: reward
+    reward_scale: 100
