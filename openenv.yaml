@@ -23,4 +23,4 @@ graders:
   - id: default_grader
     description: "Scores agent based on total reward"
     type: reward
-    reward_scale: 100
+    reward_scale: 1
