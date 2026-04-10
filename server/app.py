@@ -52,6 +52,26 @@ app = create_app(
     max_concurrent_envs=1,  # increase this number to allow more concurrent WebSocket sessions
 )
 
+# At the bottom of server/app.py, after app = create_app(...)
+
+from fastapi.responses import JSONResponse
+from fastapi import Request
+
+@app.get("/tasks")
+async def get_tasks():
+    return JSONResponse([
+        {"id": "easy", "description": "Low complexity emergency scenarios", "max_steps": 5, "has_grader": True},
+        {"id": "medium", "description": "Moderate emergency scenarios with trade-offs", "max_steps": 7, "has_grader": True},
+        {"id": "hard", "description": "High complexity emergency scenarios with severe conditions", "max_steps": 10, "has_grader": True}
+    ])
+
+@app.post("/grader")
+async def grade(request: Request):
+    body = await request.json()
+    reward = body.get("reward", 0.0)
+    score = max(0.0, min(1.0, float(reward)))
+    return JSONResponse({"score": score, "has_grader": True})
+
 def main():
     import uvicorn
     uvicorn.run("server.app:app", host="0.0.0.0", port=8000)
