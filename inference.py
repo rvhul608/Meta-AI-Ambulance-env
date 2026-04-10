@@ -85,51 +85,56 @@ def get_action(client, state, last_reward):
         return "0"
 
 # ---------------- MAIN ---------------- #
-
 def main():
     client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
-
-    # ✅ LOCAL ENV (REQUIRED FOR EVALUATION)
     env = MyEnvironment()
 
-    rewards: List[float] = []
-    steps_taken = 0
+    all_rewards = []
+    all_steps = 0
 
-    log_start(TASK_NAME, BENCHMARK, MODEL_NAME)
+    for task_id in ["easy", "medium", "hard"]:
+        rewards = []
+        steps_taken = 0
 
-    try:
-        result = env.reset()
-        last_state = result.echoed_message
-        last_reward = 0.0
+        log_start(task_id, BENCHMARK, MODEL_NAME)
 
-        for step in range(1, MAX_STEPS + 1):
-            if result.done:
-                break
-
-            action = get_action(client, last_state, last_reward)
-
-            result = env.step(MyAction(message=action))
-
-            reward = result.reward or 0.0
-            done = result.done
-
-            rewards.append(reward)
-            steps_taken = step
-
-            log_step(step, action, reward, done, None)
-
+        try:
+            result = env.reset(task_id=task_id)
             last_state = result.echoed_message
-            last_reward = reward
+            last_reward = 0.0
 
-            if done:
-                break
+            for step in range(1, MAX_STEPS + 1):
+                if result.done:
+                    break
+
+                action = get_action(client, last_state, last_reward)
+                result = env.step(MyAction(message=action))
+
+                reward = result.reward or 0.0
+                done = result.done
+
+                rewards.append(reward)
+                steps_taken = step
+
+                log_step(step, action, reward, done, None)
+
+                last_state = result.echoed_message
+                last_reward = reward
+
+                if done:
+                    break
+
+        except Exception as e:
+            log_step(0, "0", 0.0, True, str(e))
 
         score = sum(rewards) / len(rewards) if rewards else 0.0
         score = max(0.0, min(score, 1.0))
         success = score >= SUCCESS_SCORE_THRESHOLD
 
-    finally:
         log_end(success, steps_taken, score, rewards)
+
+        all_rewards.extend(rewards)
+        all_steps += steps_taken
 
 # ---------------- RUN ---------------- #
 

@@ -11,18 +11,18 @@ tasks:
     max_steps: 5
     grader:
       type: python
-      entry_point: grader:grade_easy
+      entry_point: openenv_my_env.grader:grade_easy
 
   - id: medium
     description: "Moderate emergency scenarios with trade-offs"
     max_steps: 7
     grader:
       type: python
-      entry_point: grader:grade_medium
+      entry_point: openenv_my_env.grader:grade_medium
 
   - id: hard
     description: "High complexity emergency scenarios with severe conditions"
     max_steps: 10
     grader:
       type: python
-      entry_point: grader:grade_hard
+      entry_point: openenv_my_env.grader:grade_hard
