@@ -23,6 +23,7 @@ tasks:
     max_steps: 10
     graders:
       - default_grader
+default_task: easy
 
 graders:
   - id: default_grader
