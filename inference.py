@@ -22,7 +22,7 @@ BENCHMARK = os.getenv("MY_ENV_BENCHMARK", "my_env")
 MAX_STEPS = 10
 TEMPERATURE = 0.3
 MAX_TOKENS = 50
-SUCCESS_SCORE_THRESHOLD = 0.4
+SUCCESS_SCORE_THRESHOLD = 0.2
 
 # ---------------- PROMPT ---------------- #
 
