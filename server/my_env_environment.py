@@ -133,7 +133,11 @@ class MyEnvironment(Environment):
             self._state.step_count >= self.max_steps
             or all(z["people"] == 0 for z in self.zones)
         )
-
+        max_possible = 30.0
+        min_possible = -3.0
+        reward = (reward - min_possible) / (max_possible - min_possible)
+        reward = max(0.0, min(1.0,reward))
+ 
         return MyObservation(
             echoed_message=self._format_state(),
             message_length=length,
