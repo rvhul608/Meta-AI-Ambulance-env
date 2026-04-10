@@ -10,23 +10,29 @@ tasks:
     description: "Low complexity emergency scenarios"
     max_steps: 5
     graders:
-      - default_grader
+      - easy_grader
 
   - id: medium
     description: "Moderate emergency scenarios with trade-offs"
     max_steps: 7
     graders:
-      - default_grader
+      - medium_grader
 
   - id: hard
     description: "High complexity emergency scenarios with severe conditions"
     max_steps: 10
     graders:
-      - default_grader
-default_task: easy
+      - hard_grader
 
 graders:
-  - id: default_grader
-    description: "Scores agent based on total reward"
+  - id: easy_grader
+    type: reward
+    reward_scale: 1
+
+  - id: medium_grader
+    type: reward
+    reward_scale: 1
+
+  - id: hard_grader
     type: reward
     reward_scale: 1
