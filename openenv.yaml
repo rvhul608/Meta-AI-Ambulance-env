@@ -1,5 +1,4 @@
 spec_version: 1
-env_id: my_env
 name: my_env
 type: space
 runtime: fastapi

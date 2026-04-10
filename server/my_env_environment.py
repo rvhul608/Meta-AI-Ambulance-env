@@ -1,15 +1,3 @@
-# Copyright (c) Meta Platforms, Inc. and affiliates.
-# All rights reserved.
-#
-# This source code is licensed under the BSD-style license found in the
-# LICENSE file in the root directory of this source tree.
-
-"""
-My Env Environment Implementation.
-
-A simple test environment that echoes back messages sent to it.
-Perfect for testing HTTP server infrastructure.
-"""
 from uuid import uuid4
 import random
 
@@ -43,9 +31,12 @@ class MyEnvironment(Environment):
         # Ensure reproducibility
         random.seed(42)
 
-        # Get task difficulty
-        task_id = getattr(self._state, "task_id", "easy")
+        # -------- FIXED task_id handling -------- #
+        task_id = getattr(self._state, "task_id", None)
+        if task_id is None:
+            task_id = "easy"
 
+        # -------- Task configurations -------- #
         if task_id == "easy":
             num_zones = 3
             num_ambulances = 2
@@ -64,7 +55,7 @@ class MyEnvironment(Environment):
             people_range = (5, 10)
             severity_range = (3, 5)
 
-        # Create zones
+        # -------- Create zones -------- #
         self.zones = [
             {
                 "people": random.randint(*people_range),
@@ -74,7 +65,7 @@ class MyEnvironment(Environment):
             for _ in range(num_zones)
         ]
 
-        # Create ambulances
+        # -------- Create ambulances -------- #
         self.ambulances = [
             {"available": True, "busy_time": 0}
             for _ in range(num_ambulances)
@@ -123,7 +114,7 @@ class MyEnvironment(Environment):
                 reward -= (zone["distance"] * 0.5)
 
                 if people_saved == 0:
-                    reward -= 2  # wasted action
+                    reward -= 2
 
                 # -------- Ambulance becomes busy -------- #
                 ambulance["available"] = False
