@@ -24,19 +24,13 @@ class MyEnvironment(Environment):
         self.ambulances = []
 
     # ---------------- RESET ---------------- #
-    def reset(self) -> MyObservation:
+    def reset(self, task_id: str = "easy") -> MyObservation:
         self._state = State(episode_id=str(uuid4()), step_count=0)
         self._reset_count += 1
 
-        # Ensure reproducibility
         random.seed(42)
 
-        # -------- FIXED task_id handling -------- #
-        task_id = getattr(self._state, "task_id", None)
-        if task_id is None:
-            task_id = "easy"
-
-        # -------- Task configurations -------- #
+    # -------- Task configurations -------- #
         if task_id == "easy":
             num_zones = 3
             num_ambulances = 2
@@ -55,6 +49,7 @@ class MyEnvironment(Environment):
             people_range = (5, 10)
             severity_range = (3, 5)
 
+    # rest of reset stays the same...
         # -------- Create zones -------- #
         self.zones = [
             {
