@@ -27,19 +27,24 @@ SUCCESS_SCORE_THRESHOLD = 0.2
 # ---------------- PROMPT ---------------- #
 
 SYSTEM_PROMPT = textwrap.dedent("""
-You are an emergency response system.
+You are an emergency road accident dispatch system.
 
-You are given multiple zones with:
-- number of people
-- severity
-- distance
+You are given accident zones with:
+- casualty count (people needing help)
+- severity (1.0-5.0, higher is worse)
+- distance in km (lower is faster response)
+- accident type
 
-Choose the best zone index to send an ambulance.
+You also have ambulances with availability status.
+
+Your job: choose ONE zone index to dispatch an available ambulance to.
 
 Rules:
-- Return ONLY a number (0,1,2,...)
-- Prioritize higher severity and more people
-- Prefer closer zones if similar severity
+- Return ONLY a single integer (the zone index)
+- Only choose zones where people > 0 (not CLEARED)
+- Only dispatch if at least one ambulance is AVAILABLE
+- Prioritize: highest severity first, then most casualties, then closest distance
+- Consider ALL zones including the highest numbered ones
 """).strip()
 
 # ---------------- LOGGING ---------------- #
@@ -66,23 +71,75 @@ def log_end(success: bool, steps: int, score: float, rewards: List[float]):
 
 def get_action(client, state, last_reward):
     try:
+        # Parse all zones from state
+        active_zones = []
+        lines = state.split("\n")
+        for line in lines:
+            if "Zone " in line and "CLEARED" not in line and "casualties=" in line:
+                try:
+                    idx = int(line.strip().split("Zone ")[1].split(" ")[0])
+                    severity = float(line.split("severity=")[1].split("/")[0])
+                    casualties = int(line.split("casualties=")[1].split(",")[0])
+                    distance = int(line.split("distance=")[1].replace("km","").strip())
+                    active_zones.append((idx, severity, casualties, distance))
+                except:
+                    continue
+
+        if not active_zones:
+            return "0"
+
+        # Check if any ambulance is available
+        ambulances_available = "AVAILABLE" in state
+
+        if not ambulances_available:
+            # All busy — still need to return something, pick best zone for next step
+            active_zones.sort(key=lambda x: (x[1], x[2], -x[3]), reverse=True)
+            return str(active_zones[0][0])
+
+        # Sort by: severity desc, casualties desc, distance asc
+        active_zones.sort(key=lambda x: (x[1], x[2], -x[3]), reverse=True)
+        best_zone = str(active_zones[0][0])
+
+        # Ask LLM with clear context
+        zone_summary = ", ".join([
+            f"Zone {z[0]}(sev={z[1]:.1f},cas={z[2]},dist={z[3]}km)"
+            for z in active_zones
+        ])
+
         response = client.chat.completions.create(
             model=MODEL_NAME,
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": f"{state}\nLast reward: {last_reward:.2f}"},
+                {"role": "user", "content": (
+                    f"{state}\n"
+                    f"Last reward: {last_reward:.2f}\n"
+                    f"Active zones: {zone_summary}\n"
+                    f"Best zone by priority: {best_zone}\n"
+                    f"Reply with ONLY a single digit zone index:"
+                )},
             ],
-            temperature=TEMPERATURE,
-            max_tokens=MAX_TOKENS,
+            temperature=0.0,
+            max_tokens=5,
         )
 
         text = response.choices[0].message.content.strip()
-        text = text.split()[0]
+        # Extract first digit found
+        for char in text:
+            if char.isdigit():
+                zone_ids = [str(z[0]) for z in active_zones]
+                if char in zone_ids:
+                    return char
 
-        return text if text.isdigit() else "0"
+        # Fallback to best computed zone
+        return best_zone
 
     except Exception:
-        return "0"
+        # Even on exception, try to return best zone not just "0"
+        try:
+            active_zones.sort(key=lambda x: (x[1], x[2], -x[3]), reverse=True)
+            return str(active_zones[0][0])
+        except:
+            return "0"
 
 # ---------------- MAIN ---------------- #
 def main():
