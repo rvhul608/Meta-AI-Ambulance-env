@@ -208,12 +208,19 @@ openenv validate
 
 ## 📁 Project Structure
 
-my_env/ ├── README.md \# This file ├── openenv.yaml \# OpenEnv spec
-(tasks + graders) ├── inference.py \# Baseline LLM agent ├── grader.py
-\# Task grading functions ├── models.py \# Action + Observation models
-├── client.py \# HTTP client for remote env └── server/ ├── app.py \#
-FastAPI server ├── my_env_environment.py \# Core environment logic └──
-Dockerfile
+```
+my_env/
+├── README.md                # This file
+├── openenv.yaml            # OpenEnv spec (tasks + graders)
+├── inference.py            # Baseline LLM agent
+├── grader.py               # Task grading functions
+├── models.py               # Action + Observation models
+├── client.py               # HTTP client for remote env
+├── server/
+│   └── app.py              # FastAPI server
+├── my_env_environment.py   # Core environment logic
+└── Dockerfile
+```
 
 ------------------------------------------------------------------------
 
