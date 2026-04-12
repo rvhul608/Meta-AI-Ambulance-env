@@ -333,6 +333,41 @@ my_env/
 ```
 
 ---
+## 🏗️ Architecture
+
+```
+┌─────────────────────────────────────────────────────┐
+│                    inference.py                      │
+│         (LLM Agent — Qwen2.5-72B-Instruct)          │
+└─────────────────────────┬───────────────────────────┘
+                          │ MyAction(message="2")
+                          ▼
+┌─────────────────────────────────────────────────────┐
+│                   server/app.py                      │
+│              (FastAPI HTTP Server)                   │
+│         /reset  /step  /state  /tasks  /grader       │
+└─────────────────────────┬───────────────────────────┘
+                          │
+                          ▼
+┌─────────────────────────────────────────────────────┐
+│           server/my_env_environment.py               │
+│          (Core Environment Logic)                    │
+│                                                      │
+│  reset(task_id) → initializes zones + ambulances     │
+│  step(action)  → dispatch logic + reward calculation │
+│  state         → current episode info                │
+└─────────────────────────┬───────────────────────────┘
+                          │
+                          ▼
+┌─────────────────────────────────────────────────────┐
+│                    grader.py                         │
+│         (Task-specific scoring functions)            │
+│                                                      │
+│  grade_easy()   → pure average                       │
+│  grade_medium() → average + peak bonus               │
+│  grade_hard()   → average - zero penalty             │
+└─────────────────────────────────────────────────────┘
+```
 
 ## 📋 OpenEnv Spec
 
