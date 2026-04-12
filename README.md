@@ -318,6 +318,7 @@ openenv validate
 my_env/
 ├── README.md                    # Documentation
 ├── openenv.yaml                 # OpenEnv spec (tasks + graders)
+├── Dockerfile                   # Container configuration
 ├── inference.py                 # Baseline LLM agent (Qwen2.5-72B)
 ├── demo.py                      # Standalone demo, no API key needed
 ├── grader.py                    # Task grading functions (easy/medium/hard)
