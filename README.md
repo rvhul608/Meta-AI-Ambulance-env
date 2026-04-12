@@ -115,7 +115,7 @@ Each zone represents a real road accident scenario:
 | Task | Zones | Ambulances | Severity Range | Worsening Rate | Max Steps |
 |---|:---:|:---:|:---:|:---:|:---:|
 | `easy` | 3 | 3 | 3–5 | 0.05/step | 8 |
-| `medium` | 4 | 3 | 2–4 | 0.15/step | 9 |
+| `medium` | 4 | 3 | 2–4 | 0.20/step | 9 |
 | `hard` | 5 | 3 | 2–5 | 0.35/step | 10 |
 
 ### Ambulances
